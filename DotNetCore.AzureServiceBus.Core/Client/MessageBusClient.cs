@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using DotNetCoreRabbitMq.Infrastructure.Serializer;
 using Microsoft.ServiceBus.Messaging;
 
@@ -7,6 +8,7 @@ namespace DotNetCore.AzureServiceBus.Core.Client
     public interface IMessageBusClient : IDisposable
     {
         void Send(object message);
+        Task SendAsync(object message);
     }
 
     public class MessageBusClient : IMessageBusClient
@@ -27,6 +29,23 @@ namespace DotNetCore.AzureServiceBus.Core.Client
 
         public void Send(object message)
         {
+            var msg = GetMessage(message);
+            _client.Send(msg);
+        }
+
+        public async Task SendAsync(object message)
+        {
+            var msg = GetMessage(message);
+            await _client.SendAsync(msg);
+        }
+
+        public void Dispose()
+        {
+            _client.Close();
+        }
+
+        private BrokeredMessage GetMessage(object message)
+        {
             var msg = new BrokeredMessage(_serializer.Serialize(message))
             {
                 ContentType = _serializer.ContentType,
@@ -35,12 +54,7 @@ namespace DotNetCore.AzureServiceBus.Core.Client
             msg.Properties.Add("Sender", _senderFullName);
             msg.Properties.Add("Serializer", _serializerFullName);
 
-            _client.Send(msg);
-        }
-
-        public void Dispose()
-        {
-            _client.Close();
+            return msg;
         }
     }
 }
