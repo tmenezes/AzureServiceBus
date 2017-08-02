@@ -1,12 +1,14 @@
-﻿using System.ServiceModel.PeerResolvers;
+﻿using System;
+using System.ServiceModel.PeerResolvers;
 
 namespace DotNetCore.AzureServiceBus.Core.Consumer
 {
     public class ConsumerProperties
     {
-        public string QueueName { get; private set; }
+        public string QueueName { get; set; }
         public string SubscriptionName { get; }
-        public int ConsumersQuantity { get; private set; }
+        public int ConsumersQuantity { get; set; }
+        public TimeSpan MessageLockTimeout { get; set; }
 
         //TODO: Implement support a subscriber with filtering of messages
         //public string Filtering { get; set; }
@@ -19,6 +21,7 @@ namespace DotNetCore.AzureServiceBus.Core.Consumer
             QueueName = queueName;
             SubscriptionName = subscriptionName;
             ConsumersQuantity = consumersQuantity;
+            MessageLockTimeout = TimeSpan.FromMinutes(5);
         }
 
         public static ConsumerProperties ForSingleConsumer(string queueName, string subscriptionName)

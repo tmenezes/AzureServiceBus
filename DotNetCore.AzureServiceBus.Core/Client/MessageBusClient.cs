@@ -51,7 +51,7 @@ namespace DotNetCore.AzureServiceBus.Core.Client
             var msg = new BrokeredMessage(_serializer.Serialize(message))
             {
                 ContentType = _serializer.ContentType,
-                Label = message.GetType().FullName
+                Label = message.ToString()
             };
             msg.Properties.Add("_Sender", _senderFullName);
             msg.Properties.Add("_Serializer", _serializerFullName);

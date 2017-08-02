@@ -9,9 +9,6 @@ namespace DotNetCore.AzureServiceBus.Core.Consumer
         where TService : class, IMessageBusService<TMessage>
         where TMessage : class
     {
-        private readonly string _expectedSenderName = typeof(MessageBusClient).FullName;
-        private readonly string _serializerName;
-
         private readonly string _connectionString;
         private readonly ConsumerProperties _consumerProperties;
         private readonly IMessageBusService<TMessage> _service;
@@ -27,7 +24,6 @@ namespace DotNetCore.AzureServiceBus.Core.Consumer
             _consumerProperties = consumerProperties;
             _service = dependencyResolver.Resolve<TService>();
             _serializer = dependencyResolver.Resolve<ISerializer>();
-            _serializerName = _serializer.GetType().FullName;
         }
 
         public void Start()
@@ -37,9 +33,9 @@ namespace DotNetCore.AzureServiceBus.Core.Consumer
 
             var options = new OnMessageOptions()
             {
-                MaxConcurrentCalls = _consumerProperties.ConsumersQuantity,
                 AutoComplete = false,
-                AutoRenewTimeout = TimeSpan.FromSeconds(30)
+                MaxConcurrentCalls = _consumerProperties.ConsumersQuantity,
+                AutoRenewTimeout = _consumerProperties.MessageLockTimeout
             };
 
             _subscriptionClient.OnMessage(Consume, options);
@@ -77,16 +73,7 @@ namespace DotNetCore.AzureServiceBus.Core.Consumer
 
         private bool CanReadThisMessage(BrokeredMessage msg)
         {
-            var hasSenderInfo = msg.Properties.TryGetValue("Sender", out object senderName)
-                              & msg.Properties.TryGetValue("Serializer", out object serializerName);
-
-            if (!hasSenderInfo)
-                return false;
-
-            var validSender = senderName?.ToString() == _expectedSenderName;
-            var validSerializer = serializerName?.ToString() == _serializerName;
-
-            return validSender && validSerializer;
+            return msg.ContentType == _serializer.ContentType;
         }
     }
 }
