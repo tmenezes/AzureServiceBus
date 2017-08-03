@@ -66,8 +66,7 @@ namespace DotNetCore.AzureServiceBus.Core.Consumer
             catch (Exception ex)
             {
                 // TODO: create a flexibile way to handle exception
-                //Console.WriteLine($"Queue unhandled exception. Type: {ex.GetType().Name}, Message: {ex.Message}");
-                msg.Abandon();
+                //Log error
             }
         }
 
